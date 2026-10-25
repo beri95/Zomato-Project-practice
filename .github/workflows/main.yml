@@ -1,49 +1,68 @@
 name: Secure DevSecOps Pipeline
 
-on: 
-  push: 
-    branches: 
-      - master 
-  workflow_dispatch: 
-  
+on:
+push:
+branches:
+- master
+workflow_dispatch:
+
 jobs:
-   build_and_package: 
-    name: BUILD-JOB 
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push' 
-    runs-on: ${{ matrix.os }}
+build_and_package:
+name: BUILD-JOB
 
-    permissions: 
-      actions: read 
-      contents: read
-      security-events: write 
-      
-    strategy: 
-      fail-fast: false 
-      matrix: 
-        language: ['javascript-typescript'] 
+if: github.ref == 'refs/heads/master' && github.event_name == 'push'
 
-    steps: 
+runs-on: ${{ matrix.os }}
 
-      - name: Checkout Code 
-        uses: actions/checkout@v4 
-        
-      - name: Cache Dependencies 
-        uses: actions/cache@v5 
-        with: 
-          path: ~/.npm 
-          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }} 
-          restore-keys: | 
-               ${{ runner.os }}-node-${{ matrix.node-version }}-
-               
-      - name: BUILD 
-        run: npm install 
+strategy:
+  matrix:
+    os:
+      - ubuntu-latest
+      - windows-latest
+    node-version:
+      - 22
+    language:
+      - javascript-typescript
 
-      - name: TEST 
-        run: echo "code is tested!" 
+permissions:
+  actions: read
+  contents: read
+  security-events: write
 
-      - name: Artifact upload 
-        uses: actions/upload-artifact@v7 
-        with: 
-          name: artifact-1 
-          path: | 
-            package*
+steps:
+  - name: Checkout Code
+    uses: actions/checkout@v4
+
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: ${{ matrix.node-version }}
+
+  - name: Cache Dependencies
+    uses: actions/cache@v5
+    with:
+      path: ~/.npm
+      key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+      restore-keys: |
+        ${{ runner.os }}-node-${{ matrix.node-version }}-
+
+  - name: Install Dependencies
+    run: npm install
+
+  - name: Test
+    run: echo "code is tested!"
+
+  - name: Artifact Upload
+    uses: actions/upload-artifact@v7
+    with:
+      name: artifact-${{ runner.os }}-node-${{ matrix.node-version }}
+      path: |
+        package*
+
+  - name: Deploy
+    run: echo "my code is deployed"
+
+  - name: Rollback
+    if: failure()
+    run: echo "rollback is done"
+```
