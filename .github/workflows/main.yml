@@ -5,7 +5,7 @@ on:
     branches: 
       - master 
 
-jobs: 
+jobs:
   build_and_package: 
     name: BUILD-JOB 
     runs-on: ubuntu-slim 
