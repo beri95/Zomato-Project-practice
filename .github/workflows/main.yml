@@ -6,9 +6,10 @@ on:
       - master 
 
 jobs:
-  build_and_package: 
+   build_and_package: 
     name: BUILD-JOB 
-    runs-on: ubuntu-slim 
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push' 
+    runs-on: ${{ matrix.os }}
 
     permissions: 
       actions: read 
